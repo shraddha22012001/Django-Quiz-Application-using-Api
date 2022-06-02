@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>quiz</title>
+ 
+    <script>
+let ajreq1 = null;
+function process() {
+  ajreq1 = new XMLHttpRequest();
+  ajreq1.onreadystatechange = calculateresult;
+  ajreq1.open("GET", "/jsonapi", true);
+  ajreq1.send(null);
+}
+function calculateresult() {
+  let score = 0
+  if (ajreq1.readyState == 4) {
+    var response = JSON.parse(ajreq1.responseText);
+    corrlist = [];
+    for (obj of response) {
+      corrlist.push(obj["fields"]["correctans"]);
+    }
+    
+    console.log(corrlist)
+    userlist = [];
+    for (let i = 0; i < corrlist.length; i++) {
+      if (document.getElementById(String(i) + "q1").checked) {
+        userlist.push(1);
+      } else if (document.getElementById(String(i) + "q2").checked) {
+        userlist.push(2);
+      } else if (document.getElementById(String(i) + "q3").checked) {
+        userlist.push(3);
+      } else if (document.getElementById(String(i) + "q4").checked) {
+        userlist.push(4);
+      } else {
+        userlist.push(5);
+      }
+     
+    }
+    let ajreq2 = new XMLHttpRequest();
+    ajreq2.onreadystatechange = function () {
+      if (ajreq2.readyState == 4) {
+        let obj = JSON.parse(ajreq2.responseText);
+        let div = document.getElementById("title");
+        div.innerHTML = "<br><br><br><br><br><br><br><h1 style='color:green;'>RESULT<h1><br>";
+        div2 = document.getElementById("result");
+        result = "<center><h1 style='color:blue;'>SCORE : " + obj.score + "<h1>";
+        result += "<h1>PERCENTAGE :" + obj.percentage + "%<h1>";
+        if (obj.percentage >= 60) {
+          result += "<h1 style='color:green;'>CONGRATulations!!! YOU PASSED THE TEST<h1></center><>";
+        } else {
+          result += "<h1 style='color:red;'>Oops!! you failed<h1></center>";
+        }
+        div2.innerHTML = result;
+      }
+    };
+    ajreq2.open(
+      "GET",
+      "/resultapi?userans=" +
+        JSON.stringify(userlist) +
+        "&corrans=" +
+        "["+(corrlist)+"]",
+      true
+    );
+    ajreq2.send(null);
+  }
+}
+    </script>
+  </head>
+  <body style="padding:20px">
+    <center>
+      <div id="title">
+        <h1>Python QUIZ</h1>
+        <hr/>
+      </div>
+    </center>
+    <div id="result">
+      <form method="GET" action="/calculateresult/">
+        {% for ques in questions %}
+        
+            <strong>
+              {{ques.question}}
+            </strong> <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}q1 value="1">{{ques.option1}} <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}q2 value="2">{{ques.option2}} <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}q3 value="3">{{ques.option3}} <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}q4 value="4">{{ques.option4}}<br>
+             <hr/>
+    
+        {% endfor %}
+        <pre>
+            {% comment %} <input type="submit" value="SUBMIT TEST" /> {% endcomment %}
+           <center> <input type="button" style="background-color:black;color:white;padding:15px;border-radius:15px;" value="SUBMIT TEST" onclick="process();">
+           </center></pre>
+      </form>
+    </div>
+    
+  </body>
+</html>
