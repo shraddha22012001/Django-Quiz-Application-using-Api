@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>quiz</title>
+ 
+    <script>
+let aj1 = null;
+function process() {
+  aj1 = new XMLHttpRequest();
+  aj1.onreadystatechange = calculateresult;
+  aj1.open("GET", "/jsonapi", true);
+  aj1.send(null);
+}
+function calculateresult() {
+  let score = 0
+  if (aj1.readyState == 4) {
+    var response = JSON.parse(aj1.responseText);
+    corrlist = [];
+    for (res of response) {
+      corrlist.push(res["fields"]["correctans"]);
+    }
+    
+    console.log(corrlist)
+    userlist = [];
+    for (let i = 0; i < corrlist.length; i++) {
+      if (document.getElementById(String(i) + "1").checked) {
+        userlist.push(1);
+      } else if (document.getElementById(String(i) + "2").checked) {
+        userlist.push(2);
+      } else if (document.getElementById(String(i) + "3").checked) {
+        userlist.push(3);
+      } else if (document.getElementById(String(i) + "4").checked) {
+        userlist.push(4);
+      } else {
+        userlist.push(5);
+      }
+   
+          
+    }
+    console.log(userlist);
+    let aj2 = new XMLHttpRequest();
+    aj2.onreadystatechange = function () {
+      if (aj2.readyState == 4) {
+        let res = JSON.parse(aj2.responseText);
+        console.log(res);
+        let div = document.getElementById("title");
+        div.innerHTML = "<br><br><br><br><h1 style='color:green;'>RESULT<h1><br>";
+        div2 = document.getElementById("result");
+        result = "<center><h1 style='color:blue;'>SCORE : " + res.score + "<h1>"+ "<h1>PERCENTAGE :" + res.per + "%<h1>";
+        if (res.per >= 50) {
+          result += "<h1 style='color:green;'>Congratulations!!! YOU PASSED THE TEST<h1>";
+        } else {
+          result += "<h1 style='color:red;'>Oops!! you failed<h1>";
+        }
+        result +="<a id='header-links' style='text-decoration: none;color: white;' href='{% url 'quiz' %}'><button type='button' class='btn' style='background-color:black;color:white;padding:15px;border-radius:15px;'  >Play Again</button></a><br><br></center>"
+        div2.innerHTML = result;
+      }
+    };
+    aj2.open(
+      "GET",
+      "/resultapi?userans=" +
+        JSON.stringify(userlist) +
+        "&corrans=" +
+        "["+(corrlist)+"]",
+      true
+    );
+    aj2.send(null);
+  }
+}
+    </script>
+  </head>
+  <body style="padding:20px">
+    <center>
+      <div id="title">
+        <h1>Python QUIZ</h1>
+        <hr/>
+      </div>
+    </center>
+    <div id="result">
+      <form method="GET" action="/calculateresult/">
+        {% for ques in questions %}
+        
+            <strong>
+              {{ques.question}}
+            </strong> <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}1 value="1">{{ques.option1}} <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}2 value="2">{{ques.option2}} <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}3 value="3">{{ques.option3}} <br>
+             <input type="radio" name={{ques.id}} id={{ques.id}}4 value="4">{{ques.option4}}<br>
+             <hr/>
+    
+        {% endfor %}
+        <pre>
+            
+           <center> <input type="button" style="background-color:black;color:white;padding:15px;border-radius:15px;" value="SUBMIT" onclick="process();">
+           </center></pre>
+      </form>
+    </div>
+    
+  </body>
+</html>
